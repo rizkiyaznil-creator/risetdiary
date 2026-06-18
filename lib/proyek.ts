@@ -20,12 +20,14 @@ export const proyekSaya = cache(async () => {
 export const getProyek = cache(async (proyekId: string) => {
   const sesi = await ambilSesi();
   if (!sesi?.userId) return null;
-  const keanggotaan = await prisma.keanggotaanProyek.findUnique({
-    where: { userId_proyekId: { userId: sesi.userId, proyekId } },
-  });
-  if (!keanggotaan) return null;
-  const proyek = await prisma.proyek.findUnique({ where: { id: proyekId } });
-  if (!proyek) return null;
+  // Dua query dijalankan paralel untuk mengurangi latensi.
+  const [keanggotaan, proyek] = await Promise.all([
+    prisma.keanggotaanProyek.findUnique({
+      where: { userId_proyekId: { userId: sesi.userId, proyekId } },
+    }),
+    prisma.proyek.findUnique({ where: { id: proyekId } }),
+  ]);
+  if (!keanggotaan || !proyek) return null;
   return { proyek, keanggotaan };
 });
 

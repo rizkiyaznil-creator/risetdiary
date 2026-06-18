@@ -14,8 +14,7 @@ import {
 export default async function HalamanDashboard() {
   // Penjaga utama: alihkan ke /login bila belum masuk.
   await verifikasiSesi();
-  const user = await userSekarang();
-  const daftar = await proyekSaya();
+  const [user, daftar] = await Promise.all([userSekarang(), proyekSaya()]);
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 p-6">

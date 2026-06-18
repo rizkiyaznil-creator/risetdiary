@@ -83,9 +83,15 @@ export default async function HalamanProyek({
 
   const utama = keanggotaan.peran === "PENELITI_UTAMA";
   const bisaTulis = utama || keanggotaan.peran === "PENELITI";
-  const log = await logProyek(id);
-  const milestones = await milestoneProyek(id);
-  const pengeluaran = await pengeluaranProyek(id);
+  // Query independen dijalankan paralel agar lebih cepat (1 putaran, bukan 4).
+  const [log, milestones, pengeluaran, anggota] = await Promise.all([
+    logProyek(id),
+    milestoneProyek(id),
+    pengeluaranProyek(id),
+    utama
+      ? anggotaProyek(id)
+      : Promise.resolve([] as Awaited<ReturnType<typeof anggotaProyek>>),
+  ]);
   const totalPengeluaran = pengeluaran.reduce((s, e) => s + e.jumlah, 0);
   const rekapKategori = Object.entries(
     pengeluaran.reduce<Record<string, number>>((acc, e) => {
@@ -93,7 +99,6 @@ export default async function HalamanProyek({
       return acc;
     }, {}),
   ).sort((a, b) => b[1] - a[1]);
-  const anggota = utama ? await anggotaProyek(id) : [];
   const menunggu = anggota.filter((a) => a.status === "MENUNGGU");
   const aktif = anggota.filter((a) => a.status === "TERVERIFIKASI");
 
