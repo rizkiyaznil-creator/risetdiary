@@ -3,7 +3,7 @@
 Web app untuk **mencatat dan mempertanggungjawabkan progres riset akademik**.
 Dipakai oleh peneliti untuk mencatat kegiatan, dan dipantau oleh pembimbing.
 
-> Status: **Tahap 3 — Login & peran** selesai. Lihat [Roadmap](#roadmap).
+> Status: **Tahap 4 — Proyek & keanggotaan** selesai. Lihat [Roadmap](#roadmap).
 
 ## Apa yang dicatat
 
@@ -52,18 +52,20 @@ npm run db:check     # cek koneksi database
 - [x] **Tahap 1 — Fondasi**: scaffold Next.js + Tailwind
 - [x] **Tahap 2 — Model data**: Proyek, LogKegiatan, Milestone, Pengeluaran, Jurnal, User (Prisma)
 - [x] **Tahap 3 — Login & peran**
-- [ ] **Tahap 4 — CRUD log kegiatan + link bukti**
-- [ ] **Tahap 5 — Milestone & dashboard progres**
-- [ ] **Tahap 6 — Pengeluaran + rekap dana**
-- [ ] **Tahap 7 — Akses & komentar pembimbing**
-- [ ] **Tahap 8 — Deploy online** (Postgres + hosting)
+- [x] **Tahap 4 — Proyek & keanggotaan**: buat proyek, gabung via kode, verifikasi anggota
+- [ ] **Tahap 5 — Log kegiatan + link bukti**
+- [ ] **Tahap 6 — Milestone & dashboard progres**
+- [ ] **Tahap 7 — Pengeluaran + rekap dana**
+- [ ] **Tahap 8 — Komentar pembimbing**
+- [ ] **Tahap 9 — Deploy online** (Postgres + hosting)
 
 ## Struktur folder
 
 ```
 app/              # Halaman & rute (App Router Next.js)
   (auth)/         # Login, daftar, & server actions auth
-  dashboard/      # Halaman terproteksi (perlu login)
+  dashboard/      # Halaman terproteksi (daftar proyek)
+  proyek/         # Buat, gabung (kode), & detail proyek
   layout.tsx      # Kerangka tampilan global
   page.tsx        # Halaman beranda
   generated/      # Prisma client hasil generate (tidak di-commit)
@@ -72,6 +74,8 @@ lib/              # Kode bersama
   jwt.ts          # Token session (jose) — aman untuk edge
   session.ts      # Cookie session (buat/baca/hapus)
   dal.ts          # Penjaga sesi & data user login
+  proyek.ts       # Baca data proyek & keanggotaan
+  kode.ts         # Pembuat kode proyek
   constants.ts    # Status, peran, kategori default
 prisma/
   schema.prisma   # Definisi model/tabel

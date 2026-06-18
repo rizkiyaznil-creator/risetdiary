@@ -15,7 +15,7 @@ export async function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-// Hanya jalan di rute /dashboard dan turunannya.
+// Jalan di rute privat: /dashboard dan /proyek beserta turunannya.
 export const config = {
-  matcher: ["/dashboard", "/dashboard/:path*"],
+  matcher: ["/dashboard", "/dashboard/:path*", "/proyek", "/proyek/:path*"],
 };
