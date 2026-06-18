@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/app/generated/prisma
+
+# database lokal (SQLite)
+*.db
+*.db-journal
+
+# izinkan contoh konfigurasi env ikut ter-commit
+!.env.example

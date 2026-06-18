@@ -1,0 +1,141 @@
+// Skema database RisetDiary
+// Dokumentasi: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+//  MODEL (setiap "model" = satu tabel di database)
+// ============================================================
+
+// Pengguna aplikasi. Perannya (peneliti/pembimbing) ditentukan
+// PER PROYEK lewat tabel KeanggotaanProyek, bukan global —
+// supaya satu proyek bisa punya banyak peneliti sekaligus.
+model User {
+  id        String   @id @default(cuid()) // ID acak unik
+  nama      String
+  email     String   @unique // tidak boleh ada email kembar
+  password  String // disimpan sebagai HASH, bukan teks asli
+  createdAt DateTime @default(now())
+
+  keanggotaan KeanggotaanProyek[] // proyek-proyek yang diikuti
+  logDibuat   LogKegiatan[] // log yang dia tulis
+  jurnal      Jurnal[]
+  komentar    Komentar[]
+}
+
+// Tabel penghubung: menjawab "siapa di proyek mana, sebagai apa".
+// Inilah yang memungkinkan banyak peneliti dalam satu proyek,
+// dan satu orang ikut banyak proyek.
+model KeanggotaanProyek {
+  id     String @id @default(cuid())
+  peran  String @default("PENELITI") // PENELITI_UTAMA | PENELITI | PEMBIMBING
+  status String @default("MENUNGGU") // MENUNGGU | TERVERIFIKASI | DITOLAK
+
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  proyek   Proyek @relation(fields: [proyekId], references: [id], onDelete: Cascade)
+  proyekId String
+
+  @@unique([userId, proyekId]) // satu orang tak terdaftar dua kali di proyek yang sama
+}
+
+// Proyek / penelitian
+model Proyek {
+  id            String    @id @default(cuid())
+  kode          String    @unique // kode unik untuk peneliti lain bergabung
+  judul         String
+  deskripsi     String?
+  tanggalMulai  DateTime?
+  targetSelesai DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  anggota     KeanggotaanProyek[]
+  logKegiatan LogKegiatan[]
+  milestone   Milestone[]
+  pengeluaran Pengeluaran[]
+  jurnal      Jurnal[]
+}
+
+// Log kegiatan: apa yang sudah/sedang dikerjakan + link bukti
+model LogKegiatan {
+  id        String   @id @default(cuid())
+  tanggal   DateTime
+  judul     String
+  deskripsi String?
+  linkBukti String? // URL dokumen bukti, mis. Google Drive
+  status    String   @default("BERJALAN") // BELUM | BERJALAN | SELESAI
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  proyek      Proyek     @relation(fields: [proyekId], references: [id], onDelete: Cascade)
+  proyekId    String
+  penulis     User       @relation(fields: [penulisId], references: [id])
+  penulisId   String
+  milestone   Milestone? @relation(fields: [milestoneId], references: [id]) // opsional: log bisa dikaitkan ke milestone
+  milestoneId String?
+  komentar    Komentar[]
+}
+
+// Milestone / target pencapaian
+model Milestone {
+  id        String    @id @default(cuid())
+  nama      String
+  deskripsi String?
+  tenggat   DateTime?
+  status    String    @default("BELUM") // BELUM | BERJALAN | SELESAI
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  proyek      Proyek        @relation(fields: [proyekId], references: [id], onDelete: Cascade)
+  proyekId    String
+  logKegiatan LogKegiatan[]
+}
+
+// Catatan pengeluaran (informal)
+model Pengeluaran {
+  id         String   @id @default(cuid())
+  tanggal    DateTime
+  keterangan String
+  kategori   String // teks bebas: pilih default atau ketik baru di form
+  jumlah     Int // dalam rupiah (bilangan bulat)
+  linkNota   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  proyek   Proyek @relation(fields: [proyekId], references: [id], onDelete: Cascade)
+  proyekId String
+}
+
+// Jurnal harian / catatan reflektif bebas
+model Jurnal {
+  id        String   @id @default(cuid())
+  tanggal   DateTime @default(now())
+  isi       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  proyek    Proyek @relation(fields: [proyekId], references: [id], onDelete: Cascade)
+  proyekId  String
+  penulis   User   @relation(fields: [penulisId], references: [id])
+  penulisId String
+}
+
+// Komentar, mis. feedback pembimbing pada sebuah log kegiatan
+model Komentar {
+  id        String   @id @default(cuid())
+  isi       String
+  createdAt DateTime @default(now())
+
+  penulis   User         @relation(fields: [penulisId], references: [id])
+  penulisId String
+  log       LogKegiatan? @relation(fields: [logId], references: [id], onDelete: Cascade)
+  logId     String?
+}
