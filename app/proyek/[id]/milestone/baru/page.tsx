@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getProyek, milestoneProyek } from "@/lib/proyek";
-import { FormLog } from "./form-log";
+import { getProyek } from "@/lib/proyek";
+import { FormMilestone } from "./form-milestone";
 
-export default async function HalamanTambahLog({
+export default async function HalamanTambahMilestone({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -12,15 +12,12 @@ export default async function HalamanTambahLog({
   const data = await getProyek(id);
   if (!data) notFound();
 
-  // Hanya peneliti (utama/anggota) terverifikasi yang boleh menambah log.
   const { keanggotaan } = data;
   const bisaTulis =
     keanggotaan.status === "TERVERIFIKASI" &&
     (keanggotaan.peran === "PENELITI_UTAMA" ||
       keanggotaan.peran === "PENELITI");
   if (!bisaTulis) redirect(`/proyek/${id}`);
-
-  const milestones = await milestoneProyek(id);
 
   return (
     <main className="mx-auto w-full max-w-lg flex-1 p-6">
@@ -30,11 +27,8 @@ export default async function HalamanTambahLog({
       >
         ← Kembali ke proyek
       </Link>
-      <h1 className="mt-2 mb-6 text-2xl font-semibold">Tambah log kegiatan</h1>
-      <FormLog
-        proyekId={id}
-        milestones={milestones.map((m) => ({ id: m.id, nama: m.nama }))}
-      />
+      <h1 className="mt-2 mb-6 text-2xl font-semibold">Tambah milestone</h1>
+      <FormMilestone proyekId={id} />
     </main>
   );
 }

@@ -151,6 +151,7 @@ export async function tambahLog(
   const linkBukti = String(formData.get("linkBukti") ?? "").trim();
   const status = String(formData.get("status") ?? "BERJALAN");
   const tanggalStr = String(formData.get("tanggal") ?? "");
+  const milestoneId = String(formData.get("milestoneId") ?? "").trim();
 
   if (!judul) return { error: "Judul kegiatan wajib diisi." };
   if (!STATUS_VALID.includes(status)) return { error: "Status tidak valid." };
@@ -159,6 +160,15 @@ export async function tambahLog(
   const tanggal = tanggalStr ? new Date(tanggalStr) : new Date();
   if (Number.isNaN(tanggal.getTime()))
     return { error: "Tanggal tidak valid." };
+
+  // Milestone opsional — bila diisi, pastikan milik proyek yang sama.
+  let milestoneIdFinal: string | null = null;
+  if (milestoneId) {
+    const m = await prisma.milestone.findUnique({ where: { id: milestoneId } });
+    if (!m || m.proyekId !== proyekId)
+      return { error: "Milestone tidak valid." };
+    milestoneIdFinal = m.id;
+  }
 
   await prisma.logKegiatan.create({
     data: {
@@ -169,6 +179,7 @@ export async function tambahLog(
       linkBukti: linkBukti || null,
       status,
       tanggal,
+      milestoneId: milestoneIdFinal,
     },
   });
   redirect(`/proyek/${proyekId}`);
@@ -197,4 +208,61 @@ export async function hapusLog(formData: FormData) {
   if (log.penulisId !== userId && k.peran !== "PENELITI_UTAMA") return;
   await prisma.logKegiatan.delete({ where: { id: logId } });
   revalidatePath(`/proyek/${log.proyekId}`);
+}
+
+// ===== Milestone =====
+
+export async function tambahMilestone(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { userId } = await verifikasiSesi();
+  const proyekId = String(formData.get("proyekId") ?? "");
+  if (!(await keanggotaanPenulis(proyekId, userId)))
+    return { error: "Kamu tidak berhak menambah milestone." };
+
+  const nama = String(formData.get("nama") ?? "").trim();
+  const deskripsi = String(formData.get("deskripsi") ?? "").trim();
+  const status = String(formData.get("status") ?? "BELUM");
+  const tenggatStr = String(formData.get("tenggat") ?? "");
+
+  if (!nama) return { error: "Nama milestone wajib diisi." };
+  if (!STATUS_VALID.includes(status)) return { error: "Status tidak valid." };
+  let tenggat: Date | null = null;
+  if (tenggatStr) {
+    tenggat = new Date(tenggatStr);
+    if (Number.isNaN(tenggat.getTime()))
+      return { error: "Tenggat tidak valid." };
+  }
+
+  await prisma.milestone.create({
+    data: { proyekId, nama, deskripsi: deskripsi || null, status, tenggat },
+  });
+  redirect(`/proyek/${proyekId}`);
+}
+
+export async function ubahStatusMilestone(formData: FormData) {
+  const { userId } = await verifikasiSesi();
+  const milestoneId = String(formData.get("milestoneId") ?? "");
+  const status = String(formData.get("status") ?? "");
+  if (!STATUS_VALID.includes(status)) return;
+  const m = await prisma.milestone.findUnique({ where: { id: milestoneId } });
+  if (!m) return;
+  if (!(await keanggotaanPenulis(m.proyekId, userId))) return;
+  await prisma.milestone.update({
+    where: { id: milestoneId },
+    data: { status },
+  });
+  revalidatePath(`/proyek/${m.proyekId}`);
+}
+
+export async function hapusMilestone(formData: FormData) {
+  const { userId } = await verifikasiSesi();
+  const milestoneId = String(formData.get("milestoneId") ?? "");
+  const m = await prisma.milestone.findUnique({ where: { id: milestoneId } });
+  if (!m) return;
+  if (!(await keanggotaanPenulis(m.proyekId, userId))) return;
+  // Log yang terkait tidak ikut terhapus; milestoneId-nya otomatis jadi null.
+  await prisma.milestone.delete({ where: { id: milestoneId } });
+  revalidatePath(`/proyek/${m.proyekId}`);
 }

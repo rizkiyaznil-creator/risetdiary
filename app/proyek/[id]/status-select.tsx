@@ -1,19 +1,23 @@
 "use client";
 
-import { ubahStatusLog } from "../actions";
 import { STATUS } from "@/lib/constants";
 
-// Select status yang langsung menyimpan saat diubah (tanpa tombol).
+// Select status yang langsung menyimpan saat diubah. Dipakai ulang untuk
+// log maupun milestone — server action-nya dikirim lewat prop "action".
 export function StatusSelect({
-  logId,
+  action,
+  idName,
+  idValue,
   status,
 }: {
-  logId: string;
+  action: (formData: FormData) => void | Promise<void>;
+  idName: string;
+  idValue: string;
   status: string;
 }) {
   return (
-    <form action={ubahStatusLog}>
-      <input type="hidden" name="logId" value={logId} />
+    <form action={action}>
+      <input type="hidden" name={idName} value={idValue} />
       <select
         name="status"
         defaultValue={status}

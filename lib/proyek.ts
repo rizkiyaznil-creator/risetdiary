@@ -42,7 +42,19 @@ export const anggotaProyek = cache(async (proyekId: string) => {
 export const logProyek = cache(async (proyekId: string) => {
   return prisma.logKegiatan.findMany({
     where: { proyekId },
-    include: { penulis: { select: { id: true, nama: true } } },
+    include: {
+      penulis: { select: { id: true, nama: true } },
+      milestone: { select: { id: true, nama: true } },
+    },
     orderBy: [{ tanggal: "desc" }, { createdAt: "desc" }],
+  });
+});
+
+// Daftar milestone sebuah proyek beserta jumlah log yang terkait.
+export const milestoneProyek = cache(async (proyekId: string) => {
+  return prisma.milestone.findMany({
+    where: { proyekId },
+    include: { _count: { select: { logKegiatan: true } } },
+    orderBy: [{ tenggat: "asc" }, { createdAt: "asc" }],
   });
 });

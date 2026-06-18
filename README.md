@@ -3,7 +3,7 @@
 Web app untuk **mencatat dan mempertanggungjawabkan progres riset akademik**.
 Dipakai oleh peneliti untuk mencatat kegiatan, dan dipantau oleh pembimbing.
 
-> Status: **Tahap 5 — Log kegiatan** selesai. Lihat [Roadmap](#roadmap).
+> Status: **Tahap 6 — Milestone & progres** selesai. Lihat [Roadmap](#roadmap).
 
 ## Apa yang dicatat
 
@@ -54,7 +54,7 @@ npm run db:check     # cek koneksi database
 - [x] **Tahap 3 — Login & peran**
 - [x] **Tahap 4 — Proyek & keanggotaan**: buat proyek, gabung via kode, verifikasi anggota
 - [x] **Tahap 5 — Log kegiatan + link bukti**
-- [ ] **Tahap 6 — Milestone & dashboard progres**
+- [x] **Tahap 6 — Milestone & dashboard progres**
 - [ ] **Tahap 7 — Pengeluaran + rekap dana**
 - [ ] **Tahap 8 — Komentar pembimbing**
 - [ ] **Tahap 9 — Deploy online** (Postgres + hosting)

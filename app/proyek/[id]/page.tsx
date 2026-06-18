@@ -1,12 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProyek, anggotaProyek, logProyek } from "@/lib/proyek";
+import {
+  getProyek,
+  anggotaProyek,
+  logProyek,
+  milestoneProyek,
+} from "@/lib/proyek";
 import { PERAN, STATUS, type PeranKey, type StatusKey } from "@/lib/constants";
 import {
   setujuiAnggota,
   tolakAnggota,
   resetKode,
   hapusLog,
+  ubahStatusLog,
+  ubahStatusMilestone,
+  hapusMilestone,
 } from "../actions";
 import { StatusSelect } from "./status-select";
 
@@ -62,9 +70,14 @@ export default async function HalamanProyek({
   const utama = keanggotaan.peran === "PENELITI_UTAMA";
   const bisaTulis = utama || keanggotaan.peran === "PENELITI";
   const log = await logProyek(id);
+  const milestones = await milestoneProyek(id);
   const anggota = utama ? await anggotaProyek(id) : [];
   const menunggu = anggota.filter((a) => a.status === "MENUNGGU");
   const aktif = anggota.filter((a) => a.status === "TERVERIFIKASI");
+
+  const totalM = milestones.length;
+  const selesaiM = milestones.filter((m) => m.status === "SELESAI").length;
+  const persen = totalM ? Math.round((selesaiM / totalM) * 100) : 0;
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 p-6">
@@ -85,6 +98,93 @@ export default async function HalamanProyek({
           {labelPeran(keanggotaan.peran)}
         </span>
       </div>
+
+      {/* ===== Ringkasan progres ===== */}
+      {totalM > 0 && (
+        <div className="mt-6">
+          <div className="mb-1 flex items-center justify-between text-sm">
+            <span className="font-medium">Progres milestone</span>
+            <span className="text-zinc-500">
+              {selesaiM}/{totalM} selesai ({persen}%)
+            </span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/15">
+            <div
+              className="h-full rounded-full bg-green-500 transition-all"
+              style={{ width: `${persen}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ===== Milestone ===== */}
+      <section className="mt-8">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold">Milestone</h2>
+          {bisaTulis && (
+            <Link
+              href={`/proyek/${id}/milestone/baru`}
+              className="rounded-md border border-black/15 px-3 py-1.5 text-sm hover:bg-black/[.04] dark:border-white/20 dark:hover:bg-white/[.06]"
+            >
+              + Tambah milestone
+            </Link>
+          )}
+        </div>
+
+        {milestones.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-black/15 p-6 text-center text-sm text-zinc-500 dark:border-white/20">
+            Belum ada milestone.
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {milestones.map((m) => (
+              <li
+                key={m.id}
+                className="rounded-lg border border-black/10 p-4 dark:border-white/15"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="font-medium">{m.nama}</h3>
+                    <p className="text-xs text-zinc-500">
+                      {m.tenggat
+                        ? `Tenggat ${fmtTanggal(m.tenggat)}`
+                        : "Tanpa tenggat"}{" "}
+                      · {m._count.logKegiatan} log
+                    </p>
+                  </div>
+                  {bisaTulis ? (
+                    <StatusSelect
+                      action={ubahStatusMilestone}
+                      idName="milestoneId"
+                      idValue={m.id}
+                      status={m.status}
+                    />
+                  ) : (
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs ${kelasBadgeStatus(m.status)}`}
+                    >
+                      {STATUS[m.status as StatusKey] ?? m.status}
+                    </span>
+                  )}
+                </div>
+                {m.deskripsi && (
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
+                    {m.deskripsi}
+                  </p>
+                )}
+                {bisaTulis && (
+                  <form action={hapusMilestone} className="mt-2">
+                    <input type="hidden" name="milestoneId" value={m.id} />
+                    <button className="text-sm text-red-600 hover:underline dark:text-red-400">
+                      Hapus
+                    </button>
+                  </form>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {/* ===== Log Kegiatan ===== */}
       <section className="mt-8">
@@ -116,10 +216,16 @@ export default async function HalamanProyek({
                     <h3 className="font-medium">{l.judul}</h3>
                     <p className="text-xs text-zinc-500">
                       {fmtTanggal(l.tanggal)} · {l.penulis.nama}
+                      {l.milestone && <> · 🎯 {l.milestone.nama}</>}
                     </p>
                   </div>
                   {bisaTulis ? (
-                    <StatusSelect logId={l.id} status={l.status} />
+                    <StatusSelect
+                      action={ubahStatusLog}
+                      idName="logId"
+                      idValue={l.id}
+                      status={l.status}
+                    />
                   ) : (
                     <span
                       className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs ${kelasBadgeStatus(l.status)}`}

@@ -7,7 +7,13 @@ import { STATUS } from "@/lib/constants";
 const kelasInput =
   "rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-blue-500 dark:border-white/20";
 
-export function FormLog({ proyekId }: { proyekId: string }) {
+export function FormLog({
+  proyekId,
+  milestones,
+}: {
+  proyekId: string;
+  milestones: { id: string; nama: string }[];
+}) {
   const [state, action, pending] = useActionState(tambahLog, undefined);
   const hariIni = new Date().toISOString().slice(0, 10);
 
@@ -45,6 +51,20 @@ export function FormLog({ proyekId }: { proyekId: string }) {
           className={kelasInput}
         />
       </label>
+
+      {milestones.length > 0 && (
+        <label className="flex flex-col gap-1 text-sm">
+          Kaitkan ke milestone (opsional)
+          <select name="milestoneId" defaultValue="" className={kelasInput}>
+            <option value="">(tidak terkait)</option>
+            {milestones.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.nama}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       <label className="flex flex-col gap-1 text-sm">
         Status
