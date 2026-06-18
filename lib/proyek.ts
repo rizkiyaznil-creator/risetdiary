@@ -45,6 +45,10 @@ export const logProyek = cache(async (proyekId: string) => {
     include: {
       penulis: { select: { id: true, nama: true } },
       milestone: { select: { id: true, nama: true } },
+      komentar: {
+        include: { penulis: { select: { nama: true } } },
+        orderBy: { createdAt: "asc" },
+      },
     },
     orderBy: [{ tanggal: "desc" }, { createdAt: "desc" }],
   });

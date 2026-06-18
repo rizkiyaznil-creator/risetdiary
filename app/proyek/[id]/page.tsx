@@ -17,6 +17,8 @@ import {
   ubahStatusMilestone,
   hapusMilestone,
   hapusPengeluaran,
+  tambahKomentar,
+  hapusKomentar,
 } from "../actions";
 import { StatusSelect } from "./status-select";
 
@@ -37,6 +39,14 @@ const fmtTanggal = (d: Date) =>
   });
 
 const rupiah = (n: number) => `Rp${n.toLocaleString("id-ID")}`;
+
+const fmtWaktu = (d: Date) =>
+  d.toLocaleString("id-ID", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
 export default async function HalamanProyek({
   params,
@@ -272,6 +282,52 @@ export default async function HalamanProyek({
                       </button>
                     </form>
                   )}
+                </div>
+
+                {/* Komentar */}
+                <div className="mt-3 border-t border-black/10 pt-3 dark:border-white/10">
+                  {l.komentar.length > 0 && (
+                    <ul className="mb-2 flex flex-col gap-2">
+                      {l.komentar.map((c) => (
+                        <li key={c.id} className="text-sm">
+                          <span className="font-medium">{c.penulis.nama}</span>
+                          <span className="ml-2 text-xs text-zinc-500">
+                            {fmtWaktu(c.createdAt)}
+                          </span>
+                          {(c.penulisId === keanggotaan.userId || utama) && (
+                            <form
+                              action={hapusKomentar}
+                              className="ml-2 inline"
+                            >
+                              <input
+                                type="hidden"
+                                name="komentarId"
+                                value={c.id}
+                              />
+                              <button className="text-xs text-red-600 hover:underline dark:text-red-400">
+                                hapus
+                              </button>
+                            </form>
+                          )}
+                          <p className="whitespace-pre-wrap text-zinc-600 dark:text-zinc-400">
+                            {c.isi}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <form action={tambahKomentar} className="flex gap-2">
+                    <input type="hidden" name="logId" value={l.id} />
+                    <input
+                      name="isi"
+                      required
+                      placeholder="Tulis komentar…"
+                      className="flex-1 rounded-md border border-black/15 bg-transparent px-3 py-1.5 text-sm outline-none focus:border-blue-500 dark:border-white/20"
+                    />
+                    <button className="rounded-md border border-black/15 px-3 py-1.5 text-sm hover:bg-black/[.04] dark:border-white/20 dark:hover:bg-white/[.06]">
+                      Kirim
+                    </button>
+                  </form>
                 </div>
               </li>
             ))}

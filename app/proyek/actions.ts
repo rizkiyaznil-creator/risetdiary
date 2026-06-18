@@ -318,3 +318,42 @@ export async function hapusPengeluaran(formData: FormData) {
   await prisma.pengeluaran.delete({ where: { id: pengeluaranId } });
   revalidatePath(`/proyek/${e.proyekId}`);
 }
+
+// ===== Komentar =====
+
+// Anggota terverifikasi (peran apa pun, termasuk pembimbing) boleh berkomentar.
+async function keanggotaanTerverifikasi(proyekId: string, userId: string) {
+  const k = await prisma.keanggotaanProyek.findUnique({
+    where: { userId_proyekId: { userId, proyekId } },
+  });
+  if (!k || k.status !== "TERVERIFIKASI") return null;
+  return k;
+}
+
+export async function tambahKomentar(formData: FormData) {
+  const { userId } = await verifikasiSesi();
+  const logId = String(formData.get("logId") ?? "");
+  const isi = String(formData.get("isi") ?? "").trim();
+  if (!isi) return;
+  const log = await prisma.logKegiatan.findUnique({ where: { id: logId } });
+  if (!log) return;
+  if (!(await keanggotaanTerverifikasi(log.proyekId, userId))) return;
+  await prisma.komentar.create({ data: { isi, logId, penulisId: userId } });
+  revalidatePath(`/proyek/${log.proyekId}`);
+}
+
+export async function hapusKomentar(formData: FormData) {
+  const { userId } = await verifikasiSesi();
+  const komentarId = String(formData.get("komentarId") ?? "");
+  const komentar = await prisma.komentar.findUnique({
+    where: { id: komentarId },
+    include: { log: true },
+  });
+  if (!komentar || !komentar.log) return;
+  const member = await keanggotaanTerverifikasi(komentar.log.proyekId, userId);
+  if (!member) return;
+  // Hanya penulis komentar atau peneliti utama yang boleh menghapus.
+  if (komentar.penulisId !== userId && member.peran !== "PENELITI_UTAMA") return;
+  await prisma.komentar.delete({ where: { id: komentarId } });
+  revalidatePath(`/proyek/${komentar.log.proyekId}`);
+}
