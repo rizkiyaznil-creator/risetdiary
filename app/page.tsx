@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { userSekarang } from "@/lib/dal";
+import { TandaTangan } from "./tanda-tangan";
 
 export default async function Beranda() {
   const user = await userSekarang();
@@ -40,6 +41,8 @@ export default async function Beranda() {
           </>
         )}
       </div>
+
+      <TandaTangan />
     </main>
   );
 }
