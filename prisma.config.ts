@@ -9,6 +9,8 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // Migrasi memakai koneksi langsung (DIRECT_URL) bila tersedia; runtime
+    // aplikasi memakai DATABASE_URL (boleh pooled). Lokal: cukup DATABASE_URL.
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
   },
 });
