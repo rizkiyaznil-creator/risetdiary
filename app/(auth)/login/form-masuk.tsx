@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { masuk } from "../actions";
+import { InputPassword } from "../input-password";
 
 export function FormMasuk() {
   // useActionState (React 19): state hasil action, fungsi action utk <form>,
@@ -23,12 +24,10 @@ export function FormMasuk() {
 
       <label className="flex flex-col gap-1 text-sm">
         Password
-        <input
+        <InputPassword
           name="password"
-          type="password"
           required
           autoComplete="current-password"
-          className="rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-blue-500 dark:border-white/20"
         />
       </label>
 
