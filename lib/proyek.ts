@@ -58,3 +58,11 @@ export const milestoneProyek = cache(async (proyekId: string) => {
     orderBy: [{ tenggat: "asc" }, { createdAt: "asc" }],
   });
 });
+
+// Daftar pengeluaran sebuah proyek (terbaru di atas).
+export const pengeluaranProyek = cache(async (proyekId: string) => {
+  return prisma.pengeluaran.findMany({
+    where: { proyekId },
+    orderBy: [{ tanggal: "desc" }, { createdAt: "desc" }],
+  });
+});

@@ -5,6 +5,7 @@ import {
   anggotaProyek,
   logProyek,
   milestoneProyek,
+  pengeluaranProyek,
 } from "@/lib/proyek";
 import { PERAN, STATUS, type PeranKey, type StatusKey } from "@/lib/constants";
 import {
@@ -15,6 +16,7 @@ import {
   ubahStatusLog,
   ubahStatusMilestone,
   hapusMilestone,
+  hapusPengeluaran,
 } from "../actions";
 import { StatusSelect } from "./status-select";
 
@@ -33,6 +35,8 @@ const fmtTanggal = (d: Date) =>
     month: "short",
     year: "numeric",
   });
+
+const rupiah = (n: number) => `Rp${n.toLocaleString("id-ID")}`;
 
 export default async function HalamanProyek({
   params,
@@ -71,6 +75,14 @@ export default async function HalamanProyek({
   const bisaTulis = utama || keanggotaan.peran === "PENELITI";
   const log = await logProyek(id);
   const milestones = await milestoneProyek(id);
+  const pengeluaran = await pengeluaranProyek(id);
+  const totalPengeluaran = pengeluaran.reduce((s, e) => s + e.jumlah, 0);
+  const rekapKategori = Object.entries(
+    pengeluaran.reduce<Record<string, number>>((acc, e) => {
+      acc[e.kategori] = (acc[e.kategori] ?? 0) + e.jumlah;
+      return acc;
+    }, {}),
+  ).sort((a, b) => b[1] - a[1]);
   const anggota = utama ? await anggotaProyek(id) : [];
   const menunggu = anggota.filter((a) => a.status === "MENUNGGU");
   const aktif = anggota.filter((a) => a.status === "TERVERIFIKASI");
@@ -264,6 +276,95 @@ export default async function HalamanProyek({
               </li>
             ))}
           </ul>
+        )}
+      </section>
+
+      {/* ===== Pengeluaran ===== */}
+      <section className="mt-8">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold">Pengeluaran</h2>
+          {bisaTulis && (
+            <Link
+              href={`/proyek/${id}/pengeluaran/baru`}
+              className="rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background hover:opacity-90"
+            >
+              + Tambah pengeluaran
+            </Link>
+          )}
+        </div>
+
+        {pengeluaran.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-black/15 p-8 text-center text-zinc-500 dark:border-white/20">
+            Belum ada pengeluaran.
+          </div>
+        ) : (
+          <>
+            <div className="mb-3 rounded-xl border border-black/10 p-4 dark:border-white/15">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-zinc-500">Total pengeluaran</span>
+                <span className="text-lg font-semibold">
+                  {rupiah(totalPengeluaran)}
+                </span>
+              </div>
+              <div className="mt-3 flex flex-col gap-1">
+                {rekapKategori.map(([kat, jml]) => (
+                  <div
+                    key={kat}
+                    className="flex items-center justify-between text-sm"
+                  >
+                    <span className="text-zinc-600 dark:text-zinc-400">
+                      {kat}
+                    </span>
+                    <span>{rupiah(jml)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <ul className="flex flex-col gap-2">
+              {pengeluaran.map((e) => (
+                <li
+                  key={e.id}
+                  className="flex items-start gap-3 rounded-lg border border-black/10 p-3 dark:border-white/15"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium">{e.keterangan}</p>
+                    <p className="text-xs text-zinc-500">
+                      {fmtTanggal(e.tanggal)} ·{" "}
+                      <span className="rounded-full bg-black/[.05] px-2 py-0.5 dark:bg-white/[.08]">
+                        {e.kategori}
+                      </span>
+                    </p>
+                    {e.linkNota && (
+                      <a
+                        href={e.linkNota}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                      >
+                        🔗 Lihat nota
+                      </a>
+                    )}
+                  </div>
+                  <div className="ml-auto flex shrink-0 flex-col items-end gap-1">
+                    <span className="font-medium">{rupiah(e.jumlah)}</span>
+                    {bisaTulis && (
+                      <form action={hapusPengeluaran}>
+                        <input
+                          type="hidden"
+                          name="pengeluaranId"
+                          value={e.id}
+                        />
+                        <button className="text-xs text-red-600 hover:underline dark:text-red-400">
+                          Hapus
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </section>
 

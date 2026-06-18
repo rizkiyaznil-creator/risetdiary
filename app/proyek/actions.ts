@@ -266,3 +266,55 @@ export async function hapusMilestone(formData: FormData) {
   await prisma.milestone.delete({ where: { id: milestoneId } });
   revalidatePath(`/proyek/${m.proyekId}`);
 }
+
+// ===== Pengeluaran =====
+
+export async function tambahPengeluaran(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { userId } = await verifikasiSesi();
+  const proyekId = String(formData.get("proyekId") ?? "");
+  if (!(await keanggotaanPenulis(proyekId, userId)))
+    return { error: "Kamu tidak berhak menambah pengeluaran." };
+
+  const keterangan = String(formData.get("keterangan") ?? "").trim();
+  const kategori = String(formData.get("kategori") ?? "").trim() || "Lainnya";
+  const linkNota = String(formData.get("linkNota") ?? "").trim();
+  const tanggalStr = String(formData.get("tanggal") ?? "");
+  // Ambil angka saja, agar "Rp 50.000" / "50000" sama-sama jadi 50000.
+  const jumlahDigit = String(formData.get("jumlah") ?? "").replace(/[^\d]/g, "");
+  const jumlah = jumlahDigit ? parseInt(jumlahDigit, 10) : 0;
+
+  if (!keterangan) return { error: "Keterangan wajib diisi." };
+  if (!jumlah || jumlah <= 0) return { error: "Jumlah harus lebih dari 0." };
+  if (linkNota && !/^https?:\/\//i.test(linkNota))
+    return { error: "Link nota harus diawali http:// atau https://" };
+  const tanggal = tanggalStr ? new Date(tanggalStr) : new Date();
+  if (Number.isNaN(tanggal.getTime()))
+    return { error: "Tanggal tidak valid." };
+
+  await prisma.pengeluaran.create({
+    data: {
+      proyekId,
+      keterangan,
+      kategori,
+      jumlah,
+      linkNota: linkNota || null,
+      tanggal,
+    },
+  });
+  redirect(`/proyek/${proyekId}`);
+}
+
+export async function hapusPengeluaran(formData: FormData) {
+  const { userId } = await verifikasiSesi();
+  const pengeluaranId = String(formData.get("pengeluaranId") ?? "");
+  const e = await prisma.pengeluaran.findUnique({
+    where: { id: pengeluaranId },
+  });
+  if (!e) return;
+  if (!(await keanggotaanPenulis(e.proyekId, userId))) return;
+  await prisma.pengeluaran.delete({ where: { id: pengeluaranId } });
+  revalidatePath(`/proyek/${e.proyekId}`);
+}
