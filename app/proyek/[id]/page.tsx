@@ -38,7 +38,7 @@ const fmtTanggal = (d: Date) =>
     year: "numeric",
   });
 
-const rupiah = (n: number) => `Rp${n.toLocaleString("id-ID")}`;
+const rupiah = (n: number) => `Rp ${n.toLocaleString("id-ID")}`;
 
 const fmtWaktu = (d: Date) =>
   d.toLocaleString("id-ID", {
