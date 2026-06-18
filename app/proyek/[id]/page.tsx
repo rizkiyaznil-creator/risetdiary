@@ -1,10 +1,30 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getProyek, anggotaProyek } from "@/lib/proyek";
-import { PERAN, type PeranKey } from "@/lib/constants";
-import { setujuiAnggota, tolakAnggota, resetKode } from "../actions";
+import { getProyek, anggotaProyek, logProyek } from "@/lib/proyek";
+import { PERAN, STATUS, type PeranKey, type StatusKey } from "@/lib/constants";
+import {
+  setujuiAnggota,
+  tolakAnggota,
+  resetKode,
+  hapusLog,
+} from "../actions";
+import { StatusSelect } from "./status-select";
 
 const labelPeran = (p: string) => PERAN[p as PeranKey] ?? p;
+
+const kelasBadgeStatus = (s: string) =>
+  s === "SELESAI"
+    ? "bg-green-500/15 text-green-700 dark:text-green-400"
+    : s === "BERJALAN"
+      ? "bg-blue-500/15 text-blue-700 dark:text-blue-400"
+      : "bg-zinc-500/15 text-zinc-600 dark:text-zinc-400";
+
+const fmtTanggal = (d: Date) =>
+  d.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 
 export default async function HalamanProyek({
   params,
@@ -40,6 +60,8 @@ export default async function HalamanProyek({
   }
 
   const utama = keanggotaan.peran === "PENELITI_UTAMA";
+  const bisaTulis = utama || keanggotaan.peran === "PENELITI";
+  const log = await logProyek(id);
   const anggota = utama ? await anggotaProyek(id) : [];
   const menunggu = anggota.filter((a) => a.status === "MENUNGGU");
   const aktif = anggota.filter((a) => a.status === "TERVERIFIKASI");
@@ -64,10 +86,80 @@ export default async function HalamanProyek({
         </span>
       </div>
 
-      <div className="mt-6 rounded-xl border border-dashed border-black/15 p-6 text-center text-zinc-500 dark:border-white/20">
-        Log kegiatan, milestone, dan pengeluaran akan muncul di sini (tahap
-        berikutnya).
-      </div>
+      {/* ===== Log Kegiatan ===== */}
+      <section className="mt-8">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold">Log Kegiatan</h2>
+          {bisaTulis && (
+            <Link
+              href={`/proyek/${id}/log/baru`}
+              className="rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background hover:opacity-90"
+            >
+              + Tambah log
+            </Link>
+          )}
+        </div>
+
+        {log.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-black/15 p-8 text-center text-zinc-500 dark:border-white/20">
+            Belum ada log kegiatan.
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {log.map((l) => (
+              <li
+                key={l.id}
+                className="rounded-lg border border-black/10 p-4 dark:border-white/15"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="font-medium">{l.judul}</h3>
+                    <p className="text-xs text-zinc-500">
+                      {fmtTanggal(l.tanggal)} · {l.penulis.nama}
+                    </p>
+                  </div>
+                  {bisaTulis ? (
+                    <StatusSelect logId={l.id} status={l.status} />
+                  ) : (
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs ${kelasBadgeStatus(l.status)}`}
+                    >
+                      {STATUS[l.status as StatusKey] ?? l.status}
+                    </span>
+                  )}
+                </div>
+
+                {l.deskripsi && (
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
+                    {l.deskripsi}
+                  </p>
+                )}
+
+                <div className="mt-2 flex items-center gap-4">
+                  {l.linkBukti && (
+                    <a
+                      href={l.linkBukti}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+                    >
+                      🔗 Lihat bukti
+                    </a>
+                  )}
+                  {bisaTulis && (l.penulisId === keanggotaan.userId || utama) && (
+                    <form action={hapusLog}>
+                      <input type="hidden" name="logId" value={l.id} />
+                      <button className="text-sm text-red-600 hover:underline dark:text-red-400">
+                        Hapus
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {utama && (
         <>
@@ -92,7 +184,8 @@ export default async function HalamanProyek({
 
           <section className="mt-8">
             <h2 className="mb-2 text-lg font-semibold">
-              Permintaan bergabung{menunggu.length > 0 && ` (${menunggu.length})`}
+              Permintaan bergabung
+              {menunggu.length > 0 && ` (${menunggu.length})`}
             </h2>
             {menunggu.length === 0 ? (
               <p className="text-sm text-zinc-500">Tidak ada permintaan.</p>

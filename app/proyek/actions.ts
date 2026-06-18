@@ -121,3 +121,80 @@ export async function resetKode(formData: FormData) {
   });
   revalidatePath(`/proyek/${proyekId}`);
 }
+
+// ===== Log Kegiatan =====
+
+const STATUS_VALID = ["BELUM", "BERJALAN", "SELESAI"];
+
+// Boleh menulis (log) bila anggota TERVERIFIKASI dan berperan peneliti.
+// Pembimbing hanya boleh melihat. Mengembalikan keanggotaan atau null.
+async function keanggotaanPenulis(proyekId: string, userId: string) {
+  const k = await prisma.keanggotaanProyek.findUnique({
+    where: { userId_proyekId: { userId, proyekId } },
+  });
+  if (!k || k.status !== "TERVERIFIKASI") return null;
+  if (k.peran !== "PENELITI_UTAMA" && k.peran !== "PENELITI") return null;
+  return k;
+}
+
+export async function tambahLog(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { userId } = await verifikasiSesi();
+  const proyekId = String(formData.get("proyekId") ?? "");
+  const k = await keanggotaanPenulis(proyekId, userId);
+  if (!k) return { error: "Kamu tidak berhak menambah log di proyek ini." };
+
+  const judul = String(formData.get("judul") ?? "").trim();
+  const deskripsi = String(formData.get("deskripsi") ?? "").trim();
+  const linkBukti = String(formData.get("linkBukti") ?? "").trim();
+  const status = String(formData.get("status") ?? "BERJALAN");
+  const tanggalStr = String(formData.get("tanggal") ?? "");
+
+  if (!judul) return { error: "Judul kegiatan wajib diisi." };
+  if (!STATUS_VALID.includes(status)) return { error: "Status tidak valid." };
+  if (linkBukti && !/^https?:\/\//i.test(linkBukti))
+    return { error: "Link bukti harus diawali http:// atau https://" };
+  const tanggal = tanggalStr ? new Date(tanggalStr) : new Date();
+  if (Number.isNaN(tanggal.getTime()))
+    return { error: "Tanggal tidak valid." };
+
+  await prisma.logKegiatan.create({
+    data: {
+      proyekId,
+      penulisId: userId,
+      judul,
+      deskripsi: deskripsi || null,
+      linkBukti: linkBukti || null,
+      status,
+      tanggal,
+    },
+  });
+  redirect(`/proyek/${proyekId}`);
+}
+
+export async function ubahStatusLog(formData: FormData) {
+  const { userId } = await verifikasiSesi();
+  const logId = String(formData.get("logId") ?? "");
+  const status = String(formData.get("status") ?? "");
+  if (!STATUS_VALID.includes(status)) return;
+  const log = await prisma.logKegiatan.findUnique({ where: { id: logId } });
+  if (!log) return;
+  if (!(await keanggotaanPenulis(log.proyekId, userId))) return;
+  await prisma.logKegiatan.update({ where: { id: logId }, data: { status } });
+  revalidatePath(`/proyek/${log.proyekId}`);
+}
+
+export async function hapusLog(formData: FormData) {
+  const { userId } = await verifikasiSesi();
+  const logId = String(formData.get("logId") ?? "");
+  const log = await prisma.logKegiatan.findUnique({ where: { id: logId } });
+  if (!log) return;
+  const k = await keanggotaanPenulis(log.proyekId, userId);
+  if (!k) return;
+  // Hanya penulis log atau peneliti utama yang boleh menghapus.
+  if (log.penulisId !== userId && k.peran !== "PENELITI_UTAMA") return;
+  await prisma.logKegiatan.delete({ where: { id: logId } });
+  revalidatePath(`/proyek/${log.proyekId}`);
+}

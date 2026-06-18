@@ -3,7 +3,7 @@
 Web app untuk **mencatat dan mempertanggungjawabkan progres riset akademik**.
 Dipakai oleh peneliti untuk mencatat kegiatan, dan dipantau oleh pembimbing.
 
-> Status: **Tahap 4 — Proyek & keanggotaan** selesai. Lihat [Roadmap](#roadmap).
+> Status: **Tahap 5 — Log kegiatan** selesai. Lihat [Roadmap](#roadmap).
 
 ## Apa yang dicatat
 
@@ -53,7 +53,7 @@ npm run db:check     # cek koneksi database
 - [x] **Tahap 2 — Model data**: Proyek, LogKegiatan, Milestone, Pengeluaran, Jurnal, User (Prisma)
 - [x] **Tahap 3 — Login & peran**
 - [x] **Tahap 4 — Proyek & keanggotaan**: buat proyek, gabung via kode, verifikasi anggota
-- [ ] **Tahap 5 — Log kegiatan + link bukti**
+- [x] **Tahap 5 — Log kegiatan + link bukti**
 - [ ] **Tahap 6 — Milestone & dashboard progres**
 - [ ] **Tahap 7 — Pengeluaran + rekap dana**
 - [ ] **Tahap 8 — Komentar pembimbing**
@@ -65,7 +65,7 @@ npm run db:check     # cek koneksi database
 app/              # Halaman & rute (App Router Next.js)
   (auth)/         # Login, daftar, & server actions auth
   dashboard/      # Halaman terproteksi (daftar proyek)
-  proyek/         # Buat, gabung (kode), & detail proyek
+  proyek/         # Buat, gabung, detail proyek & log kegiatan
   layout.tsx      # Kerangka tampilan global
   page.tsx        # Halaman beranda
   generated/      # Prisma client hasil generate (tidak di-commit)

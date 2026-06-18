@@ -37,3 +37,12 @@ export const anggotaProyek = cache(async (proyekId: string) => {
     orderBy: { id: "asc" },
   });
 });
+
+// Daftar log kegiatan sebuah proyek (terbaru di atas), beserta nama penulis.
+export const logProyek = cache(async (proyekId: string) => {
+  return prisma.logKegiatan.findMany({
+    where: { proyekId },
+    include: { penulis: { select: { id: true, nama: true } } },
+    orderBy: [{ tanggal: "desc" }, { createdAt: "desc" }],
+  });
+});
