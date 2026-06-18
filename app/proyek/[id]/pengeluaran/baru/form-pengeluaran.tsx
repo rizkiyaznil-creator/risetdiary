@@ -1,10 +1,17 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { tambahPengeluaran } from "../../../actions";
 
 const kelasInput =
   "rounded-md border border-black/15 bg-transparent px-3 py-2 outline-none focus:border-blue-500 dark:border-white/20";
+
+// Format angka jadi ribuan ala Indonesia: "1000000" -> "1.000.000"
+function formatRupiah(nilai: string): string {
+  const digit = nilai.replace(/\D/g, "").replace(/^0+/, "");
+  if (!digit) return "";
+  return digit.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
 
 export function FormPengeluaran({
   proyekId,
@@ -14,6 +21,7 @@ export function FormPengeluaran({
   kategoris: string[];
 }) {
   const [state, action, pending] = useActionState(tambahPengeluaran, undefined);
+  const [jumlah, setJumlah] = useState("");
   const hariIni = new Date().toISOString().slice(0, 10);
 
   return (
@@ -54,15 +62,22 @@ export function FormPengeluaran({
       </label>
 
       <label className="flex flex-col gap-1 text-sm">
-        Jumlah (Rp)
-        <input
-          name="jumlah"
-          type="text"
-          inputMode="numeric"
-          required
-          placeholder="mis. 50000"
-          className={kelasInput}
-        />
+        Jumlah
+        <div className="relative">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">
+            Rp
+          </span>
+          <input
+            name="jumlah"
+            type="text"
+            inputMode="numeric"
+            required
+            value={jumlah}
+            onChange={(e) => setJumlah(formatRupiah(e.target.value))}
+            placeholder="50.000"
+            className={`${kelasInput} w-full pl-9`}
+          />
+        </div>
       </label>
 
       <label className="flex flex-col gap-1 text-sm">
