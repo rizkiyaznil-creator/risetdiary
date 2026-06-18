@@ -3,6 +3,7 @@ import { verifikasiSesi, userSekarang } from "@/lib/dal";
 import { proyekSaya } from "@/lib/proyek";
 import { keluar } from "../(auth)/actions";
 import { PwaButtons } from "./pwa-buttons";
+import { TandaTangan } from "../tanda-tangan";
 import {
   PERAN,
   STATUS_KEANGGOTAAN,
@@ -92,6 +93,8 @@ export default async function HalamanDashboard() {
           </ul>
         )}
       </section>
+
+      <TandaTangan className="mt-10" />
     </main>
   );
 }
