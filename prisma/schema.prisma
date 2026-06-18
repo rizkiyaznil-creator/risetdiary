@@ -34,8 +34,9 @@ model User {
 // Inilah yang memungkinkan banyak peneliti dalam satu proyek,
 // dan satu orang ikut banyak proyek.
 model KeanggotaanProyek {
-  id    String @id @default(cuid())
-  peran String @default("PENELITI") // "PENELITI" atau "PEMBIMBING"
+  id     String @id @default(cuid())
+  peran  String @default("PENELITI") // PENELITI_UTAMA | PENELITI | PEMBIMBING
+  status String @default("MENUNGGU") // MENUNGGU | TERVERIFIKASI | DITOLAK
 
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId   String
@@ -48,6 +49,7 @@ model KeanggotaanProyek {
 // Proyek / penelitian
 model Proyek {
   id            String    @id @default(cuid())
+  kode          String    @unique // kode unik untuk peneliti lain bergabung
   judul         String
   deskripsi     String?
   tanggalMulai  DateTime?
