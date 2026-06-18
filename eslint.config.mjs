@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Prisma client hasil generate (jangan di-lint):
     "app/generated/**",
+    // Service worker (lingkungan berbeda, bukan bagian app):
+    "public/sw.js",
   ]),
 ]);
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { verifikasiSesi, userSekarang } from "@/lib/dal";
 import { proyekSaya } from "@/lib/proyek";
 import { keluar } from "../(auth)/actions";
+import { PwaButtons } from "./pwa-buttons";
 import {
   PERAN,
   STATUS_KEANGGOTAAN,
@@ -17,19 +18,22 @@ export default async function HalamanDashboard() {
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 p-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Halo, {user?.nama} 👋</h1>
           <p className="text-sm text-zinc-500">{user?.email}</p>
         </div>
-        <form action={keluar}>
-          <button
-            type="submit"
-            className="rounded-md border border-black/15 px-3 py-1.5 text-sm hover:bg-black/[.04] dark:border-white/20 dark:hover:bg-white/[.06]"
-          >
-            Keluar
-          </button>
-        </form>
+        <div className="flex items-center gap-2">
+          <PwaButtons />
+          <form action={keluar}>
+            <button
+              type="submit"
+              className="rounded-md border border-black/15 px-3 py-1.5 text-sm hover:bg-black/[.04] dark:border-white/20 dark:hover:bg-white/[.06]"
+            >
+              Keluar
+            </button>
+          </form>
+        </div>
       </div>
 
       <section className="mt-8">
