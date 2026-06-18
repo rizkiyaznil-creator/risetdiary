@@ -3,7 +3,7 @@
 Web app untuk **mencatat dan mempertanggungjawabkan progres riset akademik**.
 Dipakai oleh peneliti untuk mencatat kegiatan, dan dipantau oleh pembimbing.
 
-> Status: **Tahap 2 — Model data** selesai. Lihat [Roadmap](#roadmap).
+> Status: **Tahap 3 — Login & peran** selesai. Lihat [Roadmap](#roadmap).
 
 ## Apa yang dicatat
 
@@ -25,14 +25,16 @@ Dipakai oleh peneliti untuk mencatat kegiatan, dan dipantau oleh pembimbing.
 |---|---|---|
 | Kerangka web | [Next.js](https://nextjs.org) (App Router, TypeScript) | Frontend + backend/API dalam satu proyek, satu bahasa |
 | Database | [Prisma](https://www.prisma.io) + SQLite | Struktur data gampang dibaca; SQLite nol setup untuk belajar. Pindah ke Postgres saat online |
-| Login | [Auth.js](https://authjs.dev) | Login & pembeda peran peneliti/pembimbing |
+| Login | Session JWT ([jose](https://github.com/panva/jose)) + [bcryptjs](https://github.com/dcodeIO/bcrypt.js) | Auth email+password native Next 16 — transparan & ringan |
 | Tampilan | [Tailwind CSS](https://tailwindcss.com) | Styling cepat lewat class |
 
 ## Menjalankan secara lokal
 
 ```bash
-npm install        # pasang dependency (otomatis generate Prisma client)
-npm run dev        # jalankan server pengembangan
+cp .env.example .env   # lalu isi SESSION_SECRET dengan nilai acak
+npm install            # pasang dependency (otomatis generate Prisma client)
+npm run db:migrate     # siapkan tabel database
+npm run dev            # jalankan server pengembangan
 ```
 
 Buka <http://localhost:3000> di browser.
@@ -49,7 +51,7 @@ npm run db:check     # cek koneksi database
 
 - [x] **Tahap 1 — Fondasi**: scaffold Next.js + Tailwind
 - [x] **Tahap 2 — Model data**: Proyek, LogKegiatan, Milestone, Pengeluaran, Jurnal, User (Prisma)
-- [ ] **Tahap 3 — Login & peran**
+- [x] **Tahap 3 — Login & peran**
 - [ ] **Tahap 4 — CRUD log kegiatan + link bukti**
 - [ ] **Tahap 5 — Milestone & dashboard progres**
 - [ ] **Tahap 6 — Pengeluaran + rekap dana**
@@ -60,16 +62,21 @@ npm run db:check     # cek koneksi database
 
 ```
 app/              # Halaman & rute (App Router Next.js)
+  (auth)/         # Login, daftar, & server actions auth
+  dashboard/      # Halaman terproteksi (perlu login)
   layout.tsx      # Kerangka tampilan global
   page.tsx        # Halaman beranda
-  globals.css     # Style global (Tailwind)
   generated/      # Prisma client hasil generate (tidak di-commit)
 lib/              # Kode bersama
   prisma.ts       # Koneksi database (pola singleton)
+  jwt.ts          # Token session (jose) — aman untuk edge
+  session.ts      # Cookie session (buat/baca/hapus)
+  dal.ts          # Penjaga sesi & data user login
   constants.ts    # Status, peran, kategori default
 prisma/
   schema.prisma   # Definisi model/tabel
   migrations/     # Riwayat perubahan struktur database
+proxy.ts          # Proteksi rute (dulu "middleware")
 scripts/          # Skrip bantu (mis. cek database)
 public/           # Aset statis (gambar, ikon)
 ```
