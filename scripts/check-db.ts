@@ -1,11 +1,10 @@
 // Cek cepat koneksi database & skema. Jalankan dengan: npm run db:check
 // Memakai import relatif (bukan alias "@/") agar mudah dijalankan via tsx.
+import "dotenv/config"; // muat DATABASE_URL dari .env
 import { PrismaClient } from "../app/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL ?? "file:./dev.db",
-});
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {

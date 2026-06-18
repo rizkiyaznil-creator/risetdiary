@@ -1,13 +1,11 @@
 // Satu instance PrismaClient untuk seluruh aplikasi (pola "singleton").
 // Tujuannya mencegah koneksi database menumpuk saat hot-reload di mode dev.
 import { PrismaClient } from "@/app/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 // Prisma 7 tidak lagi punya engine bawaan — koneksi ke database lewat
-// "driver adapter". Untuk SQLite lokal kita pakai better-sqlite3.
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL ?? "file:./dev.db",
-});
+// "driver adapter". Aplikasi memakai PostgreSQL (mis. Neon saat deploy).
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
 const globalForPrisma = globalThis as unknown as {
   prisma: InstanceType<typeof PrismaClient> | undefined;
