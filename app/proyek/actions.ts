@@ -137,6 +137,16 @@ async function keanggotaanPenulis(proyekId: string, userId: string) {
   return k;
 }
 
+// Hanya peneliti utama (terverifikasi) yang boleh meng-edit / menghapus catatan.
+async function keanggotaanUtama(proyekId: string, userId: string) {
+  const k = await prisma.keanggotaanProyek.findUnique({
+    where: { userId_proyekId: { userId, proyekId } },
+  });
+  if (!k || k.status !== "TERVERIFIKASI" || k.peran !== "PENELITI_UTAMA")
+    return null;
+  return k;
+}
+
 export async function tambahLog(
   _prev: FormState,
   formData: FormData,
@@ -192,7 +202,7 @@ export async function ubahStatusLog(formData: FormData) {
   if (!STATUS_VALID.includes(status)) return;
   const log = await prisma.logKegiatan.findUnique({ where: { id: logId } });
   if (!log) return;
-  if (!(await keanggotaanPenulis(log.proyekId, userId))) return;
+  if (!(await keanggotaanUtama(log.proyekId, userId))) return;
   await prisma.logKegiatan.update({ where: { id: logId }, data: { status } });
   revalidatePath(`/proyek/${log.proyekId}`);
 }
@@ -202,10 +212,7 @@ export async function hapusLog(formData: FormData) {
   const logId = String(formData.get("logId") ?? "");
   const log = await prisma.logKegiatan.findUnique({ where: { id: logId } });
   if (!log) return;
-  const k = await keanggotaanPenulis(log.proyekId, userId);
-  if (!k) return;
-  // Hanya penulis log atau peneliti utama yang boleh menghapus.
-  if (log.penulisId !== userId && k.peran !== "PENELITI_UTAMA") return;
+  if (!(await keanggotaanUtama(log.proyekId, userId))) return;
   await prisma.logKegiatan.delete({ where: { id: logId } });
   revalidatePath(`/proyek/${log.proyekId}`);
 }
@@ -248,7 +255,7 @@ export async function ubahStatusMilestone(formData: FormData) {
   if (!STATUS_VALID.includes(status)) return;
   const m = await prisma.milestone.findUnique({ where: { id: milestoneId } });
   if (!m) return;
-  if (!(await keanggotaanPenulis(m.proyekId, userId))) return;
+  if (!(await keanggotaanUtama(m.proyekId, userId))) return;
   await prisma.milestone.update({
     where: { id: milestoneId },
     data: { status },
@@ -261,7 +268,7 @@ export async function hapusMilestone(formData: FormData) {
   const milestoneId = String(formData.get("milestoneId") ?? "");
   const m = await prisma.milestone.findUnique({ where: { id: milestoneId } });
   if (!m) return;
-  if (!(await keanggotaanPenulis(m.proyekId, userId))) return;
+  if (!(await keanggotaanUtama(m.proyekId, userId))) return;
   // Log yang terkait tidak ikut terhapus; milestoneId-nya otomatis jadi null.
   await prisma.milestone.delete({ where: { id: milestoneId } });
   revalidatePath(`/proyek/${m.proyekId}`);
@@ -314,7 +321,7 @@ export async function hapusPengeluaran(formData: FormData) {
     where: { id: pengeluaranId },
   });
   if (!e) return;
-  if (!(await keanggotaanPenulis(e.proyekId, userId))) return;
+  if (!(await keanggotaanUtama(e.proyekId, userId))) return;
   await prisma.pengeluaran.delete({ where: { id: pengeluaranId } });
   revalidatePath(`/proyek/${e.proyekId}`);
 }
