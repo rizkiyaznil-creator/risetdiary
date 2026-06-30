@@ -179,7 +179,7 @@ export default async function HalamanProyek({
                       · {m._count.logKegiatan} log
                     </p>
                   </div>
-                  {bisaTulis ? (
+                  {utama ? (
                     <StatusSelect
                       action={ubahStatusMilestone}
                       idName="milestoneId"
@@ -199,7 +199,7 @@ export default async function HalamanProyek({
                     {m.deskripsi}
                   </p>
                 )}
-                {bisaTulis && (
+                {utama && (
                   <form action={hapusMilestone} className="mt-2">
                     <input type="hidden" name="milestoneId" value={m.id} />
                     <button className="text-sm text-red-600 hover:underline dark:text-red-400">
@@ -246,7 +246,7 @@ export default async function HalamanProyek({
                       {l.milestone && <> · 🎯 {l.milestone.nama}</>}
                     </p>
                   </div>
-                  {bisaTulis ? (
+                  {utama ? (
                     <StatusSelect
                       action={ubahStatusLog}
                       idName="logId"
@@ -279,7 +279,7 @@ export default async function HalamanProyek({
                       🔗 Lihat bukti
                     </a>
                   )}
-                  {bisaTulis && (l.penulisId === keanggotaan.userId || utama) && (
+                  {utama && (
                     <form action={hapusLog}>
                       <input type="hidden" name="logId" value={l.id} />
                       <button className="text-sm text-red-600 hover:underline dark:text-red-400">
@@ -409,7 +409,7 @@ export default async function HalamanProyek({
                   </div>
                   <div className="ml-auto flex shrink-0 flex-col items-end gap-1">
                     <span className="font-medium">{rupiah(e.jumlah)}</span>
-                    {bisaTulis && (
+                    {utama && (
                       <form action={hapusPengeluaran}>
                         <input
                           type="hidden"
