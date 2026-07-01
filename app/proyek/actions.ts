@@ -37,6 +37,8 @@ export async function buatProyek(
   const judul = String(formData.get("judul") ?? "").trim();
   const deskripsi = String(formData.get("deskripsi") ?? "").trim();
   if (!judul) return { error: "Judul proyek wajib diisi." };
+  if (judul.length > 150 || deskripsi.length > 2000)
+    return { error: "Judul atau deskripsi terlalu panjang." };
 
   const proyek = await prisma.proyek.create({
     data: {
@@ -164,6 +166,8 @@ export async function tambahLog(
   const milestoneId = String(formData.get("milestoneId") ?? "").trim();
 
   if (!judul) return { error: "Judul kegiatan wajib diisi." };
+  if (judul.length > 200 || deskripsi.length > 5000)
+    return { error: "Judul atau deskripsi terlalu panjang." };
   if (!STATUS_VALID.includes(status)) return { error: "Status tidak valid." };
   if (linkBukti && !/^https?:\/\//i.test(linkBukti))
     return { error: "Link bukti harus diawali http:// atau https://" };
@@ -234,6 +238,8 @@ export async function tambahMilestone(
   const tenggatStr = String(formData.get("tenggat") ?? "");
 
   if (!nama) return { error: "Nama milestone wajib diisi." };
+  if (nama.length > 150 || deskripsi.length > 2000)
+    return { error: "Nama atau deskripsi terlalu panjang." };
   if (!STATUS_VALID.includes(status)) return { error: "Status tidak valid." };
   let tenggat: Date | null = null;
   if (tenggatStr) {
@@ -294,6 +300,8 @@ export async function tambahPengeluaran(
   const jumlah = jumlahDigit ? parseInt(jumlahDigit, 10) : 0;
 
   if (!keterangan) return { error: "Keterangan wajib diisi." };
+  if (keterangan.length > 300 || kategori.length > 60)
+    return { error: "Keterangan atau kategori terlalu panjang." };
   if (!jumlah || jumlah <= 0) return { error: "Jumlah harus lebih dari 0." };
   if (linkNota && !/^https?:\/\//i.test(linkNota))
     return { error: "Link nota harus diawali http:// atau https://" };
@@ -341,7 +349,7 @@ export async function tambahKomentar(formData: FormData) {
   const { userId } = await verifikasiSesi();
   const logId = String(formData.get("logId") ?? "");
   const isi = String(formData.get("isi") ?? "").trim();
-  if (!isi) return;
+  if (!isi || isi.length > 2000) return;
   const log = await prisma.logKegiatan.findUnique({ where: { id: logId } });
   if (!log) return;
   if (!(await keanggotaanTerverifikasi(log.proyekId, userId))) return;
