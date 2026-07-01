@@ -23,6 +23,8 @@ export async function daftar(
 
   if (!nama || !email || !password)
     return { error: "Semua kolom wajib diisi." };
+  if (nama.length > 100 || email.length > 200)
+    return { error: "Nama atau email terlalu panjang." };
   if (!EMAIL_REGEX.test(email)) return { error: "Format email tidak valid." };
   if (password.length < 6)
     return { error: "Password minimal 6 karakter." };
@@ -32,9 +34,21 @@ export async function daftar(
 
   // Password TIDAK pernah disimpan apa adanya — selalu di-hash dulu.
   const hash = await bcrypt.hash(password, 10);
-  const user = await prisma.user.create({
-    data: { nama, email, password: hash },
-  });
+  // .catch menangani balapan: dua pendaftaran email sama nyaris bersamaan (P2002).
+  const user = await prisma.user
+    .create({ data: { nama, email, password: hash } })
+    .catch((e: unknown) => {
+      if (
+        e &&
+        typeof e === "object" &&
+        "code" in e &&
+        (e as { code?: string }).code === "P2002"
+      ) {
+        return null;
+      }
+      throw e;
+    });
+  if (!user) return { error: "Email sudah terdaftar. Silakan masuk." };
 
   await buatSesi(user.id);
   redirect("/dashboard");
