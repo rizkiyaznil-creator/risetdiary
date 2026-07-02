@@ -42,6 +42,13 @@ export default async function Beranda() {
         )}
       </div>
 
+      <Link
+        href="/tentang"
+        className="text-sm text-zinc-500 hover:underline"
+      >
+        Tentang aplikasi
+      </Link>
+
       <TandaTangan />
     </main>
   );

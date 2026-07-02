@@ -2,7 +2,6 @@ import Link from "next/link";
 import { verifikasiSesi, userSekarang } from "@/lib/dal";
 import { proyekSaya } from "@/lib/proyek";
 import { keluar } from "../(auth)/actions";
-import { PwaButtons } from "./pwa-buttons";
 import { TandaTangan } from "../tanda-tangan";
 import {
   PERAN,
@@ -24,7 +23,12 @@ export default async function HalamanDashboard() {
           <p className="text-sm text-zinc-500">{user?.email}</p>
         </div>
         <div className="flex items-center gap-2">
-          <PwaButtons />
+          <Link
+            href="/tentang"
+            className="rounded-md border border-black/15 px-3 py-1.5 text-sm hover:bg-black/[.04] dark:border-white/20 dark:hover:bg-white/[.06]"
+          >
+            Tentang
+          </Link>
           <form action={keluar}>
             <button
               type="submit"
